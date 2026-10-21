@@ -27,7 +27,9 @@ from lithos_ssl.data.splits import (
 
 
 class LithosPPLDataset(Dataset):
-    """One row of ``center_component.csv`` -> one PPL image (+ optional label).
+    """One row of the prepared patch index (``patch_index.csv``, built by
+    ``scripts/prepare_data.py`` -- see ``data/splits.py``'s module docstring for why
+    that preparation step exists) -> one PPL image (+ optional label).
 
     Parameters
     ----------

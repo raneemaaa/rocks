@@ -56,7 +56,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--checkpoint-id", default=None, help="HF model id override for frozen baselines.")
     parser.add_argument("--data-root", default="data/raw/lithos")
-    parser.add_argument("--csv-name", default="center_component.csv")
+    parser.add_argument("--csv-name", default="patch_index.csv")
     parser.add_argument("--image-size", type=int, default=224)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=4)

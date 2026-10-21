@@ -30,6 +30,7 @@ from lithos_ssl.data.splits import (
     MULTICLASS_LABEL_COLUMN,
     PATCH_PATH_COLUMN,
     PPL_MARKER,
+    PREPARED_INDEX_NAME,
     section_level_split,
 )
 
@@ -90,6 +91,13 @@ def build_eval_transform(image_size: int) -> Callable:
 class LithosDataModule(pl.LightningDataModule):
     """Loads LITHOS PPL patches and exposes the dataloaders training/eval code needs.
 
+    Reads a single prepared index CSV (``patch_index.csv`` by default -- the output of
+    ``scripts/prepare_data.py``, which joins the real download's two fold-index files
+    with each patch's own per-patch label file; see ``src/lithos_ssl/data/splits.py``'s
+    module docstring for why that join is needed and isn't done here). This class
+    itself doesn't know or care about that raw, two-level layout -- it just wants
+    ``Sec_patch`` / ``Binary_label`` / ``Multiclass_label`` columns.
+
     Four dataloaders come out of this, all built from the same section-level
     train/val/test split (see data/splits.py) so no thin section ever appears in more
     than one of them:
@@ -110,7 +118,7 @@ class LithosDataModule(pl.LightningDataModule):
         self,
         root: str | Path,
         method: Optional[str] = None,
-        csv_name: str = "center_component.csv",
+        csv_name: str = PREPARED_INDEX_NAME,
         image_size: int = 224,
         batch_size: int = 64,
         num_workers: int = 4,

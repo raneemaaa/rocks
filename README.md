@@ -39,7 +39,7 @@ src/lithos_ssl/
                      "online kNN eval" callback that drives checkpoint selection
   utils/             small shared helpers (seeding)
 scripts/
-  prepare_data.py           validate a fresh Kaggle download against the expected schema
+  prepare_data.py           join the real download's raw files into one clean index CSV
   make_synthetic_dataset.py generate a tiny fake dataset for a fast local smoke test
   train.py                  train one method (Hydra entrypoint)
   evaluate.py                linear-probe + kNN evaluation of one checkpoint
@@ -69,33 +69,56 @@ There is no config flag that turns XPL on.
 ## Getting the data (you need to do this step)
 
 The Kaggle dataset page requires a logged-in account to even browse its file listing,
-so this is the one step I genuinely could not do for you (entering credentials on your
-behalf is outside what I'll do automatically) -- and since the exact folder/CSV layout
-of the real download was therefore never visible to me while building this, the schema
-assumptions below (`center_component.csv`, `Sec_patch`/`Binary_label`/`Multiclass_label`
-columns, `ppl-0`/`xpl-0` filenames) come from the
-[dataset authors' own public code](https://github.com/BCV-Uniandes/LITHOS/blob/main/data_loader.py),
-not from inspecting the actual files.
+so entering credentials to get past that login was always going to be your step, not
+something done automatically on your behalf. Once your `kaggle.json` API token was in
+place, though, that same login let us authenticate the Kaggle CLI and actually inspect
+the real file layout (`kaggle datasets files`, plus downloading the two small
+fold-index CSVs and one sample patch) -- so the schema this project is built against is
+now **confirmed against the real dataset**, not just inferred from the
+[dataset authors' public code](https://github.com/BCV-Uniandes/LITHOS/blob/main/data_loader.py)
+the way it was initially. Specifically, confirmed: the real layout is *two-level*, not
+one flat CSV --
+
+- `Fold1_complete_info_allclasses.csv` / `Fold2_complete_info_allclasses.csv` at the
+  dataset root, each listing PPL patch paths (`Sec_patch`) for one of two
+  cross-validation folds. Together they list all 105,802 labeled patches -- which
+  matches the dataset's documented "105,802 expert-annotated grains" figure exactly
+  (the documented "211,604 patches" figure is these same locations counted twice, once
+  per polarization).
+- every patch has its own folder (e.g. `GMAS_LOTE/7/132/`) containing `ppl-0.png`,
+  `xpl-0.png`, and its *own* small `center_component.csv` with that patch's
+  `Multiclass_label`/`Binary_label`.
+- the thin-section id is two directory levels above the image file (e.g.
+  `GMAS_LOTE/7`) -- confirmed to give exactly 580 distinct values across the real
+  105,802-row index, matching the documented "580 thin sections" exactly.
+
+`scripts/prepare_data.py` does the one-time join of those two levels into a single
+`patch_index.csv` (`Sec_patch`/`Binary_label`/`Multiclass_label`), which is the only
+file the rest of this codebase actually reads -- see the module docstring in
+[`src/lithos_ssl/data/splits.py`](src/lithos_ssl/data/splits.py) for the full story of
+how this was figured out.
 
 1. Install the Kaggle CLI (already in `requirements.txt`) and set up your API token:
-   Kaggle account -> Settings -> "Create New Token" -> downloads `kaggle.json` -> put
-   it at `~/.kaggle/kaggle.json` (`chmod 600` it). Full instructions:
-   https://github.com/Kaggle/kaggle-api#api-credentials
-2. Download and unzip:
+   Kaggle account -> Settings -> "Create New Token" -> put the credentials at
+   `~/.kaggle/kaggle.json` as `{"username": "...", "key": "..."}` (`chmod 600` it).
+   Full instructions: https://github.com/Kaggle/kaggle-api#api-credentials
+2. Download and unzip -- **this is large, about 18.6 GB**, so make sure you have disk
+   space and a bit of time:
    ```bash
    kaggle datasets download -d paolaruizpuentes/lithos-dataset -p data/raw/lithos --unzip
    ```
-3. Validate it against what this project expects, **before** launching any real
+3. Build the prepared index and sanity-check it, **before** launching any real
    training run:
    ```bash
    python scripts/prepare_data.py --root data/raw/lithos
    ```
-   If this fails or prints a warning, the real download's layout differs from what we
-   assumed -- every error message names the exact one or two lines in
-   [`src/lithos_ssl/data/splits.py`](src/lithos_ssl/data/splits.py) to fix (the column
-   names at the top of the file, or `section_id_from_patch_path()` if thin-section ids
-   need extracting differently). Everything downstream reads those same constants, so
-   it's a one-place fix.
+   This reads all ~105,802 per-patch label files once (a progress bar is shown; it'll
+   take a few minutes), writes `data/raw/lithos/patch_index.csv`, then reports the
+   class distribution and the train/val/test split sizes. If anything about the
+   download doesn't match what's documented above (a rare future dataset-version
+   change, for instance), the error messages point at the exact constants to fix in
+   `src/lithos_ssl/data/splits.py` -- everything downstream reads those same
+   constants, so it's a one-place fix.
 
 DINOv3's pretrained weights (used only for the frozen baseline) are *also*
 access-gated, separately, on Hugging Face: accept the license at
@@ -110,7 +133,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 pip install -e .        # makes `import lithos_ssl` work from scripts/, tests/, anywhere
-pytest -q               # ~24 tests, synthetic data only, no network -- should take <30s
+pytest -q               # ~28 tests, synthetic data only, no network -- should take <30s
 ```
 
 This exact dependency set (PyTorch 2.14, PyTorch Lightning 2.6.5, Lightly 1.5.26,
@@ -175,10 +198,10 @@ Patches are split by **thin section**, not randomly by patch -- see the detailed
 rationale in [`src/lithos_ssl/data/splits.py`](src/lithos_ssl/data/splits.py). Short
 version: patches from the same slide look extremely similar to each other, so a random
 patch-level split would leak near-duplicates across train/val/test and inflate every
-accuracy number. The section id is currently extracted with a best-effort heuristic
-(parent folder name) since the real download's layout wasn't visible while building
-this -- `scripts/prepare_data.py` prints a warning if that heuristic looks wrong for
-your actual download.
+accuracy number. The section id (two directory levels above the image file) was run
+against the real, full 105,802-row label index while building this project and
+produces exactly 580 distinct sections with zero leakage across splits -- matching the
+dataset's documented section count exactly, so this isn't a guess.
 
 ## Fine-tuning on the company dataset later
 
@@ -191,14 +214,22 @@ the "real" representation) and attach a new task-specific head.
 
 ## Honest limitations of this round
 
-This codebase was built and tested on a machine with no CUDA GPU, no access to the
-(login-gated) real dataset, and no access to the (login-gated) DINOv3 weights. What was
-actually verified here: the full pipeline -- data loading, every method's
-training_step, checkpointing, the online-eval callback, linear-probe/kNN
-evaluation, and results aggregation -- runs correctly end to end, via both the pytest
-suite (`tests/`, synthetic data) and a real `scripts/train.py` → `evaluate.py` →
-`aggregate_results.py` run on a synthetic dataset
-(`scripts/make_synthetic_dataset.py`). None of the numbers that run produced mean
-anything (it's random noise images trained for a couple of epochs) -- the real
-comparison needs the real dataset and real training time, on real GPU hardware, which
-is the natural next step from here.
+This codebase was built and tested on a machine with no CUDA GPU and no access to the
+(login-gated) DINOv3 weights. What was actually verified here:
+
+- **The schema**: not a guess -- authenticated against the real Kaggle API, listed the
+  real file tree, downloaded the real fold-index CSVs (all 105,802 real rows) and one
+  real per-patch label file, and ran the actual `section_level_split`/
+  `section_id_from_patch_path` logic against that real data (580 sections, zero
+  leakage, matching the documented numbers exactly -- see "Getting the data" above).
+- **The pipeline**: every method's training_step, checkpointing, the online-eval
+  callback, linear-probe/kNN evaluation, and results aggregation run correctly end to
+  end, via both the pytest suite (`tests/`, synthetic data laid out exactly like the
+  real download) and a real `scripts/train.py` → `evaluate.py` → `aggregate_results.py`
+  run on a synthetic dataset (`scripts/make_synthetic_dataset.py`).
+
+What's **not** verified yet: the actual ~18.6GB of images themselves (downloading those
+requires your Kaggle login, not something this session did), and therefore any real
+accuracy numbers -- the synthetic run's numbers are meaningless (random noise, a couple
+of epochs). The real comparison needs the real images and real training time, on real
+GPU hardware, which is the natural next step from here.

@@ -3,12 +3,15 @@
 Usage:
     python scripts/make_synthetic_dataset.py --root data/synthetic
 
-This is *not* real data -- just random-noise JPEGs with the same CSV schema and
-PPL/XPL filename convention as the real dataset (see
-src/lithos_ssl/data/splits.py:generate_synthetic_lithos_dataset, which this wraps).
-Its only purpose is letting you run the full training + evaluation pipeline end to end
-in seconds, to confirm everything is wired together correctly, before pointing it at
-the real ~211k-image download and letting it run for hours. For example:
+This is *not* real data -- just random-noise PNGs laid out exactly like the real
+download (fold-index CSVs + nested per-patch folders -- see
+src/lithos_ssl/data/splits.py's module docstring for why that layout exists). This
+script runs both real steps against that fake raw data -- generating it, then building
+the prepared index exactly the way `scripts/prepare_data.py` does for the real
+download -- so its output is immediately usable by `scripts/train.py`. Its only
+purpose is letting you run the full training + evaluation pipeline end to end in
+seconds, to confirm everything is wired together correctly, before pointing it at the
+real ~18GB download and letting it run for hours. For example:
 
     python scripts/make_synthetic_dataset.py --root data/synthetic
     python scripts/train.py model=simclr data.root=data/synthetic data.image_size=32 \\
@@ -25,7 +28,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from lithos_ssl.data.splits import generate_synthetic_lithos_dataset  # noqa: E402
+from lithos_ssl.data.splits import (  # noqa: E402
+    PREPARED_INDEX_NAME,
+    build_patch_index,
+    generate_synthetic_lithos_dataset,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -41,8 +48,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    csv_path = generate_synthetic_lithos_dataset(
-        root=Path(args.root),
+    root = Path(args.root)
+    generate_synthetic_lithos_dataset(
+        root=root,
         n_sections=args.n_sections,
         patches_per_section=args.patches_per_section,
         image_size=args.image_size,
@@ -50,8 +58,12 @@ def main() -> None:
         seed=args.seed,
     )
     n_images = args.n_sections * args.patches_per_section
-    print(f"Wrote {n_images} synthetic PPL images (+{n_images} XPL counterparts, never used) under {args.root}")
-    print(f"CSV: {csv_path}")
+    print(f"Wrote {n_images} synthetic PPL images (+{n_images} XPL counterparts, never used) under {root}")
+
+    index_df = build_patch_index(root, show_progress=False)
+    index_path = root / PREPARED_INDEX_NAME
+    index_df.to_csv(index_path, index=False)
+    print(f"Built prepared index: {index_path} ({len(index_df)} labeled patches)")
 
 
 if __name__ == "__main__":

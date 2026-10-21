@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# Virtual environment
+venv/
+.venv/
+
+# The real dataset is large and not ours to redistribute. scripts/make_synthetic_dataset.py's
+# output is regenerable on demand and not worth tracking either. pytest's own
+# synthetic fixtures live under pytest's tmp_path, never inside this repo at all.
+data/raw/*
+data/processed/*
+data/synthetic/
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Checkpoints and TensorBoard logs are large and regenerable from a training run --
+# ignored. results/runs/*.json (small, per-run accuracy records) are NOT ignored: they
+# ARE the results this project documents, and results/RESULTS.md is generated from them.
+checkpoints/**/*.ckpt
+results/logs/*
+!results/logs/.gitkeep
+
+# Hydra's own run-output directories (it creates a timestamped folder per run).
+outputs/
+multirun/
+
+# Editor/OS cruft
+.DS_Store
+.vscode/

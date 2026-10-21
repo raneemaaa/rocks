@@ -1,0 +1,11 @@
+# The DINOv3 frozen baseline (see src/lithos_ssl/models/frozen_backbone.py). Not used
+# by scripts/train.py (there's nothing to train); scripts/evaluate.py reads this when
+# called with --model dinov3_frozen.
+name: dinov3_frozen
+
+# Smallest released DINOv3 checkpoint (ViT-S/16, ~21M params) -- a fair-ish size match
+# against the ResNet18/ViT-S backbones the trained methods use by default. Swap to a
+# bigger facebook/dinov3-* checkpoint (see huggingface.co/facebook) for a stronger but
+# slower baseline. Access is gated: you must accept Meta's license on Hugging Face and
+# be logged in (`huggingface-cli login`) before this checkpoint can be downloaded.
+checkpoint_id: facebook/dinov3-vits16-pretrain-lvd1689m

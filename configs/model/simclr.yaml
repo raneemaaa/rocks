@@ -1,0 +1,13 @@
+# SimCLR. Every field below (other than `name` and `transform`) is passed straight
+# into lithos_ssl.models.simclr.SimCLR as a constructor keyword argument.
+name: simclr
+
+backbone_name: resnet18
+hidden_dim: 2048
+output_dim: 2048
+lr: 0.06
+
+# Passed to lithos_ssl.data.datamodule.build_ssl_transform (-> lightly's
+# SimCLRTransform) alongside data.image_size.
+transform:
+  min_scale: 0.08

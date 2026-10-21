@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lithos-ssl"
+version = "0.1.0"
+description = "Self-supervised pretraining experiments (DINO/DINOv2/MSN/SimCLR) on the LITHOS thin-section dataset."
+requires-python = ">=3.10"
+
+# We install this project itself in "editable" mode (`pip install -e .`) so
+# that `import lithos_ssl` works from anywhere (scripts/, tests/, a notebook)
+# without fiddling with PYTHONPATH, while edits to src/ take effect immediately.
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

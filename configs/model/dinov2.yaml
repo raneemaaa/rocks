@@ -1,0 +1,28 @@
+# DINOv2. Every field below (other than `name` and `transform`) is passed straight
+# into lithos_ssl.models.dinov2.DINOv2 as a constructor keyword argument.
+name: dinov2
+
+# vit_small_patch16_224 ("ViT-S/16") is the smallest config the original DINOv2 paper
+# reports; swap to e.g. vit_tiny_patch16_224 for an even faster local smoke test
+# (see configs/model/dinov2_smoke.yaml).
+backbone_name: vit_small_patch16_224
+image_size: ${data.image_size}
+ibot_separate_head: false
+drop_path_rate: 0.1
+lr: 0.001
+koleo_weight: 0.1
+momentum_start: 0.992
+momentum_end: 1.0
+teacher_temp_start: 0.04
+teacher_temp_end: 0.07
+teacher_temp_warmup_epochs: 30
+weight_decay_start: 0.04
+weight_decay_end: 0.4
+
+# Passed to lithos_ssl.data.datamodule.build_ssl_transform (-> lightly's DINOTransform,
+# the same multi-crop recipe plain DINO uses) alongside data.image_size. DINOv2's own
+# patch-masking happens inside the model's training_step, not here.
+transform:
+  global_crop_scale: [0.32, 1.0]
+  local_crop_scale: [0.05, 0.32]
+  n_local_views: 8

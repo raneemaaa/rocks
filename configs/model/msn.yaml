@@ -1,0 +1,21 @@
+# MSN. Every field below (other than `name` and `transform`) is passed straight into
+# lithos_ssl.models.msn.MSN as a constructor keyword argument.
+name: msn
+
+image_size: ${data.image_size}
+patch_size: 16
+num_layers: 12
+num_heads: 6
+hidden_dim: 384
+mlp_dim: 1536 # 384 * 4, matches ViT-S/16's usual MLP expansion ratio
+projection_hidden_dim: 2048
+projection_output_dim: 256
+num_prototypes: 1024
+mask_ratio: 0.15
+momentum: 0.996
+lr: 0.00015
+
+# Passed to lithos_ssl.data.datamodule.build_ssl_transform (-> lightly's MSNTransform)
+# alongside data.image_size. Left empty to use Lightly's defaults (2 random views +
+# 10 small "focal" views per image); override here if you want to tune it.
+transform: {}

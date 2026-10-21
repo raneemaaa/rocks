@@ -1,0 +1,36 @@
+# Root Hydra config for scripts/train.py. Compose an experiment by overriding the
+# `model` group on the command line, e.g.:
+#
+#   python scripts/train.py model=dinov2
+#   python scripts/train.py model=msn trainer.max_epochs=5 data.batch_size=32
+#
+# See https://hydra.cc/docs/intro/ if the override syntax is unfamiliar -- in short,
+# `group=option` swaps in configs/<group>/<option>.yaml, and `a.b.c=value` overrides
+# one leaf field anywhere in the composed config.
+defaults:
+  - data: lithos
+  - model: simclr
+  - _self_
+
+seed: 42
+# Checkpoints for this run go here; scripts/train.py appends the model name so
+# different methods never overwrite each other's checkpoints.
+output_dir: checkpoints/${model.name}
+
+trainer:
+  max_epochs: 10
+  accelerator: auto # picks CUDA > MPS > CPU automatically
+  devices: 1
+  log_every_n_steps: 10
+
+knn_eval:
+  k: 20
+  every_n_epochs: 1 # how often the OnlineKNNEvalCallback checks downstream accuracy
+
+hydra:
+  job:
+    # Without this, Hydra silently `cd`s into outputs/.../ before running, which
+    # breaks every relative path in this project (data.root, output_dir, ...).
+    chdir: false
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}

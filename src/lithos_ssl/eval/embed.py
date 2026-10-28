@@ -1,11 +1,3 @@
-"""Turn a (frozen or trained) backbone + a dataloader into a matrix of embeddings.
-
-Every evaluation method in this package (kNN, linear probe, the online-eval callback)
-needs the same first step: run every image in a split through `model.embed(x)` and
-collect the results alongside their labels. Keeping that loop in one place means the
-eval code itself doesn't need to know anything about PyTorch dataloaders or devices.
-"""
-
 from __future__ import annotations
 
 import numpy as np

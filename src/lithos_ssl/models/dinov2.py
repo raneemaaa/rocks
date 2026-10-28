@@ -1,38 +1,3 @@
-"""DINOv2: "Learning Robust Visual Features without Supervision" (Oquab et al., 2023).
-
-The core idea, in plain English
---------------------------------
-DINOv2 is DINO (see models/dino.py -- read that one first, this builds on it) plus two
-extra ingredients:
-
-1. **iBOT patch-level loss.** DINO only ever compares the *whole-image* summary (the
-   "class token") between student and teacher. DINOv2 additionally hides ("masks") a
-   random block of the student's input patches and asks it to predict, for each hidden
-   patch, what the teacher saw there -- a masked-image-modelling objective borrowed from
-   iBOT, layered on top of DINO's image-level objective. This pushes the model to learn
-   useful *local* / fine-grained features, not just a global summary -- plausibly
-   valuable here, since telling two minerals apart is often about a small grain's
-   texture, not the whole patch.
-2. **KoLeo regularizer.** A small extra loss term that spreads the student's class-token
-   embeddings out to be more uniformly distributed within a batch, which empirically
-   makes nearest-neighbour-style downstream use (exactly what our kNN evaluation does)
-   work better.
-
-Both the DINO loss and the iBOT loss still use the same student/teacher-with-momentum
-setup as plain DINO; nothing about *that* mechanism changes.
-
-Because DINOv2 needs to mask individual patch *tokens* before the transformer ever sees
-them (not just mask pixels in the input image), the backbone has to be a ViT wrapped in
-Lightly's `MaskedVisionTransformerTIMM`, which exposes an `encode(x, mask=...)` API --
-plain `backbone(x)` won't do.
-
-Closely follows Lightly's reference implementation
-(lightly/examples/pytorch_lightning/dinov2.py), restructured to read its hyperparameters
-(including which ViT size to use -- useful for keeping local smoke tests fast) from a
-Hydra config (configs/model/dinov2.yaml), and with an `embed()` method added for
-evaluation.
-"""
-
 from __future__ import annotations
 
 import copy

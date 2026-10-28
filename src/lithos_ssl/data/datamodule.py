@@ -1,16 +1,3 @@
-"""The PyTorch Lightning DataModule that ties everything in data/ together.
-
-A DataModule's job is to be the single place that knows how to go from "a directory on
-disk" to "dataloaders a Trainer can call .fit()/.validate() with". Putting that logic
-here (instead of inline in a training script) is what lets the exact same data pipeline
-be reused by scripts/train.py, scripts/evaluate.py, and the test suite.
-
-Each self-supervised method needs a *different* augmentation pipeline (DINO wants
-multiple global+local crops, SimCLR wants a simple pair of views, ...), so this module
-also owns a small factory function, `build_ssl_transform`, that picks the right Lightly
-transform for the method named in the config.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -34,9 +21,6 @@ from lithos_ssl.data.splits import (
     section_level_split,
 )
 
-# Methods that only need a trivial "pick the n_local_views if the transform supports
-# it" style mapping; kept explicit (not clever/generic) so it's obvious at a glance
-# which Lightly transform class backs which method name used throughout the configs.
 _MULTI_CROP_METHODS = {"dino", "dinov2"}
 
 
@@ -52,10 +36,6 @@ def build_ssl_transform(method: str, image_size: int, **transform_kwargs) -> Cal
     focal_size = transform_kwargs.pop("focal_size", max(image_size // 2, 16))
 
     if method in _MULTI_CROP_METHODS:
-        # DINO and DINOv2 share the same multi-crop augmentation recipe (2 global crops
-        # the student+teacher both see, plus several small "local" crops only the
-        # student sees). DINOv2 additionally does patch *masking* inside the model's
-        # training_step, not in this transform -- see models/dinov2.py.
         return DINOTransform(
             global_crop_size=image_size,
             local_crop_size=local_crop_size,
@@ -73,11 +53,6 @@ def build_ssl_transform(method: str, image_size: int, **transform_kwargs) -> Cal
 
 
 def build_eval_transform(image_size: int) -> Callable:
-    """A plain, single-view transform used for anything that is *not* pretraining:
-    the online kNN-eval callback, the final linear-probe/kNN evaluation, and the kNN
-    "reference bank". No random augmentation -- we want a stable, repeatable embedding
-    for a given image, not a different crop every time we look at it.
-    """
     mean, std = IMAGENET_NORMALIZE["mean"], IMAGENET_NORMALIZE["std"]
     return T.Compose(
         [
@@ -89,31 +64,6 @@ def build_eval_transform(image_size: int) -> Callable:
 
 
 class LithosDataModule(pl.LightningDataModule):
-    """Loads LITHOS PPL patches and exposes the dataloaders training/eval code needs.
-
-    Reads a single prepared index CSV (``patch_index.csv`` by default -- the output of
-    ``scripts/prepare_data.py``, which joins the real download's two fold-index files
-    with each patch's own per-patch label file; see ``src/lithos_ssl/data/splits.py``'s
-    module docstring for why that join is needed and isn't done here). This class
-    itself doesn't know or care about that raw, two-level layout -- it just wants
-    ``Sec_patch`` / ``Binary_label`` / ``Multiclass_label`` columns.
-
-    Four dataloaders come out of this, all built from the same section-level
-    train/val/test split (see data/splits.py) so no thin section ever appears in more
-    than one of them:
-
-    - ``train_dataloader``:      SSL-augmented views, labels ignored. Used by Trainer.fit.
-    - ``train_eval_dataloader``: a capped, *labelled*, non-augmented subset of the train
-                                  split. This is the "reference bank" the kNN classifier
-                                  searches against -- it needs real images with real
-                                  labels, not augmented pretraining views.
-    - ``val_dataloader``:        labelled, non-augmented. Used as the kNN "query" set by
-                                  the online-eval callback during training, and for
-                                  hyperparameter/checkpoint decisions.
-    - ``test_dataloader``:       labelled, non-augmented, held out until the very end
-                                  for the final reported numbers in RESULTS.md.
-    """
-
     def __init__(
         self,
         root: str | Path,
@@ -147,12 +97,6 @@ class LithosDataModule(pl.LightningDataModule):
         csv_path = self.root / self.csv_name
         df = pd.read_csv(csv_path)
 
-        # Defensive filter: even though we expect the CSV to only list PPL patches
-        # (per the authors' own loader), we don't actually control what the real
-        # Kaggle download's CSV looks like, so we filter on the PPL marker ourselves
-        # rather than trusting the file. This is the second of three independent PPL
-        # guarantees in this codebase (prepare_data.py is the first, LithosPPLDataset's
-        # constructor assertion is the third).
         df = df[df[PATCH_PATH_COLUMN].astype(str).str.contains(PPL_MARKER, regex=False)]
         df = section_level_split(
             df, val_fraction=self.val_fraction, test_fraction=self.test_fraction, seed=self.seed
@@ -164,10 +108,6 @@ class LithosDataModule(pl.LightningDataModule):
 
         eval_transform = build_eval_transform(self.image_size)
 
-        # `method=None` means "I only want the labelled eval dataloaders" (this is how
-        # scripts/evaluate.py uses this class -- it never trains, so it has no use for
-        # an SSL multi-view transform, and building one would just mean knowing an
-        # arbitrary method name that's irrelevant to what it's doing).
         if self.method is not None:
             ssl_transform = build_ssl_transform(self.method, self.image_size, **self.transform_kwargs)
             self.train_dataset = LithosPPLDataset(
@@ -194,9 +134,6 @@ class LithosDataModule(pl.LightningDataModule):
                 "so it has no SSL-augmented train_dataloader. Pass a method name "
                 "('dino'/'dinov2'/'msn'/'simclr') if you intend to train with it."
             )
-        # drop_last=True: several SSL losses (SimCLR's NT-Xent, MSN's prototype
-        # assignment) compare samples *within* a batch, so a ragged final batch would
-        # either crash or silently change the loss's behaviour.
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,

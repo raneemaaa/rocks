@@ -1,14 +1,3 @@
-"""The PyTorch Dataset for LITHOS patches -- PPL (plane-polarized light) only.
-
-LITHOS pairs every plane-polarized (PPL) patch with a cross-polarized (XPL) patch of
-the same spot on the slide. The user explicitly asked to train on PPL only, so this
-file is written to make an XPL image structurally impossible to load: we never read
-the XPL-related columns the authors' loader uses, we never apply the "ppl-0" ->
-"xpl-0" substitution they use to *find* the XPL pair, and the constructor refuses to
-start if it is ever handed a row whose path doesn't contain the PPL marker. There is
-no flag that turns XPL on.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -27,30 +16,6 @@ from lithos_ssl.data.splits import (
 
 
 class LithosPPLDataset(Dataset):
-    """One row of the prepared patch index (``patch_index.csv``, built by
-    ``scripts/prepare_data.py`` -- see ``data/splits.py``'s module docstring for why
-    that preparation step exists) -> one PPL image (+ optional label).
-
-    Parameters
-    ----------
-    df:
-        A dataframe with at least the ``Sec_patch`` column (relative path to the PPL
-        patch). Typically a ``train``/``val``/``test`` slice produced by
-        :func:`lithos_ssl.data.splits.section_level_split`.
-    root:
-        Directory that ``Sec_patch`` paths are relative to.
-    transform:
-        Applied to the loaded PIL image. During *pretraining* this is one of Lightly's
-        multi-view transforms (e.g. ``DINOTransform``), which returns a *list* of
-        augmented crops instead of a single tensor -- the self-supervised loss needs
-        several differently-augmented views of the same image to compare against each
-        other. During *evaluation* (linear probe, kNN, the online-eval callback) it's a
-        plain resize+normalize transform returning a single tensor.
-    label_column:
-        Which label column to return (``Multiclass_label`` by default). Pass ``None``
-        if you don't have/want labels (pretraining never looks at the label anyway).
-    """
-
     def __init__(
         self,
         df: pd.DataFrame,
@@ -85,8 +50,5 @@ class LithosPPLDataset(Dataset):
 
         view = self.transform(image) if self.transform is not None else image
 
-        # -1 is a harmless placeholder: pretraining never reads the label, so any
-        # downstream code that *does* need real labels (eval/knn.py, linear_probe.py)
-        # is expected to construct this dataset with a real `label_column`.
         label = int(row[self.label_column]) if self.label_column is not None else -1
         return view, label

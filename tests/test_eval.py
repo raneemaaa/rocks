@@ -1,7 +1,3 @@
-"""Tests for src/lithos_ssl/eval/ -- kNN accuracy, linear-probe accuracy, and the
-online-evaluation callback that drives checkpoint selection during training.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path

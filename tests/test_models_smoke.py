@@ -1,16 +1,3 @@
-"""End-to-end smoke tests: does each LightningModule actually train, on real (if tiny)
-data, through a real (if tiny) PyTorch Lightning Trainer?
-
-These intentionally use dimensions far smaller than anything you'd train for real
-(see configs/model/*.yaml for the real defaults) -- the point here is only to prove
-every piece of plumbing (dataloader -> transform -> model -> loss -> optimizer ->
-momentum update -> logging) is wired together correctly and runs without crashing or
-producing NaNs, on this machine, in a few seconds. It says nothing about whether the
-resulting features are any *good* -- that question needs the real dataset and much
-more training, which is exactly why this project can't fully evaluate itself inside
-this environment (see README.md).
-"""
-
 from __future__ import annotations
 
 import math

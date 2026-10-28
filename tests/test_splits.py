@@ -1,12 +1,3 @@
-"""Tests for src/lithos_ssl/data/splits.py.
-
-Three things matter most here, and all three come straight from the user's
-requirements or from what we learned authenticating against the real Kaggle dataset:
-1. the raw-download-to-index join (build_patch_index) works correctly
-2. the train/val/test split never leaks a thin section across splits
-3. nothing in this codebase can ever pick up an XPL (cross-polarized) image
-"""
-
 from __future__ import annotations
 
 import csv

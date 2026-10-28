@@ -1,5 +1,3 @@
-"""Tests for src/lithos_ssl/data/datamodule.py and lithos_dataset.py."""
-
 from __future__ import annotations
 
 from pathlib import Path

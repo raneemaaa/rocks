@@ -1,12 +1,3 @@
-"""Shared CNN backbone builder, used by the DINO (v1) and SimCLR LightningModules.
-
-DINOv2 and MSN need a *maskable* Vision Transformer (the model has to be able to zero
-out some patch tokens before they ever reach the transformer -- a plain forward pass
-can't do that), so they build their own backbone directly next to their training logic
-in models/dinov2.py and models/msn.py using Lightly's dedicated masked-ViT wrapper
-classes. This file only covers the simpler "ordinary CNN, no masking" case.
-"""
-
 from __future__ import annotations
 
 import torch.nn as nn

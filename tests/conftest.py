@@ -1,10 +1,3 @@
-"""Shared pytest fixtures.
-
-One synthetic dataset is generated once per test session (not once per test) and
-reused everywhere -- it's randomly generated but deterministic (fixed seed), and
-nothing in the test suite mutates it, so sharing it just saves a bit of time.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path

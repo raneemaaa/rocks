@@ -1,33 +1,3 @@
-"""MSN: "Masked Siamese Networks for Label-Efficient Learning" (Assran et al., 2022).
-
-The core idea, in plain English
---------------------------------
-Like DINO, MSN compares a "target" view of an image against "anchor" views of the same
-image using a momentum-updated network, with no negative pairs. The twist: the anchor
-views are heavily *masked* -- a large fraction of their patch tokens are simply dropped
-before the transformer ever sees them (not blurred or blacked out: removed from the
-sequence entirely, which is also why this is relatively cheap to train, since the
-transformer does less work per anchor view). The target view is left intact.
-
-Instead of comparing raw embeddings directly, both the target and the (masked) anchor
-embeddings are first expressed as soft assignments to a shared bank of learned
-"prototype" vectors (think: a small, trainable, non-semantic codebook). The model is
-trained so that a masked anchor's prototype assignment matches its unmasked target's
-assignment -- i.e. even after you remove most of its patches, the model should still be
-able to tell *which* exemplar it's looking at.
-
-Terminology note (it trips people up): here "target" (`self.backbone` /
-`self.projection_head`) is the frozen, momentum-updated network -- the role DINO calls
-the "teacher" -- and "anchor" (`self.anchor_backbone` / `self.anchor_projection_head`)
-is the one actually trained by the optimizer -- the role DINO calls the "student". The
-anchor is also the one that gets masked.
-
-Closely follows Lightly's reference implementation
-(lightly/examples/pytorch_lightning/msn.py), restructured to read its hyperparameters
-(including the ViT's size -- useful for fast local smoke tests) from a Hydra config
-(configs/model/msn.yaml), and with an `embed()` method added for evaluation.
-"""
-
 from __future__ import annotations
 
 import copy

@@ -1,10 +1,3 @@
-"""Reproducibility helper.
-
-Self-supervised runs involve a lot of randomness (augmentations, crop sampling,
-weight init, shuffling, masking). Fixing every RNG we can reach makes two runs with
-the same config comparable, and makes a failing test reproducible instead of flaky.
-"""
-
 import random
 
 import numpy as np

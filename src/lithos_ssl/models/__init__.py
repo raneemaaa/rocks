@@ -1,13 +1,3 @@
-"""One LightningModule per self-supervised method, plus a frozen-backbone wrapper.
-
-`MODEL_REGISTRY` is the single place that maps the short name used throughout the
-configs (``configs/model/<name>.yaml``, the ``model=<name>`` Hydra override, the
-``--model`` flag on scripts/evaluate.py) to the class that implements it. Every config
-field under ``configs/model/<name>.yaml`` (other than ``name`` and ``transform``, which
-describe the data pipeline, not the model) is passed straight through as a constructor
-keyword argument -- see scripts/train.py's `build_model`.
-"""
-
 from lithos_ssl.models.dino import DINO
 from lithos_ssl.models.dinov2 import DINOv2
 from lithos_ssl.models.frozen_backbone import FrozenBackbone

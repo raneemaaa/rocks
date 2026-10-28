@@ -1,26 +1,3 @@
-"""A frozen, pretrained backbone used only for *evaluation* -- never trained here.
-
-This is how DINOv3 is covered in this project. Lightly does not implement DINOv3
-training (confirmed against its docs/examples before writing this codebase), and
-nobody pretrains a model of that scale from scratch on a ~200k-image domain dataset
-anyway -- DINOv3's whole selling point is that its off-the-shelf features are already
-excellent without any fine-tuning. So instead of a training LightningModule, this file
-just loads Meta's released weights and reports how good they are at telling our
-mineral classes apart out of the box, as a reference point for the methods we *do*
-train (DINO, DINOv2, MSN, SimCLR -- see dino.py, dinov2.py, msn.py, simclr.py).
-
-Any Hugging Face vision model that returns a pooled embedding (DINOv3, DINOv2-via-HF,
-a plain ViT, ...) works here, not just DINOv3 -- `checkpoint_id` is a config value, not
-a hardcoded string.
-
-Gating note: Meta's DINOv3 checkpoints on Hugging Face are access-gated -- you must be
-logged into a Hugging Face account that has accepted the DINOv3 license before
-`from_pretrained` below will succeed. Run `huggingface-cli login` (or set the
-`HF_TOKEN` environment variable) yourself; this project never touches your
-credentials, and the first run will simply raise a clear error if you haven't done
-this yet.
-"""
-
 from __future__ import annotations
 
 import torch

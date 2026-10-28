@@ -1,24 +1,3 @@
-"""Turn a freshly-downloaded LITHOS dataset into the one clean index file the rest of
-this project reads, and sanity-check it along the way.
-
-Usage:
-    python scripts/prepare_data.py --root data/raw/lithos
-
-What this actually does: the real download's labels aren't in one place (see
-src/lithos_ssl/data/splits.py's module docstring for the full story -- confirmed by
-actually authenticating against the Kaggle API and probing the real file layout, since
-the dataset page requires a login to even browse). In short: two "fold" files at the
-root list every labeled patch's path, and each patch has its *own* tiny
-center_component.csv with its grain label, in its own folder. This script joins those
-into a single ``<root>/patch_index.csv`` with ``Sec_patch`` / ``Binary_label`` /
-``Multiclass_label`` columns -- the only file ``LithosDataModule`` (and everything
-built on it) actually reads.
-
-This reads ~105,802 small files once, so it'll take a little while (a progress bar is
-shown) -- but it's a one-time step; every later `scripts/train.py` / `evaluate.py` run
-just reads the one resulting CSV.
-"""
-
 from __future__ import annotations
 
 import argparse

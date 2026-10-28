@@ -1,25 +1,3 @@
-"""Generate a tiny, fully synthetic LITHOS-shaped dataset for a fast local smoke test.
-
-Usage:
-    python scripts/make_synthetic_dataset.py --root data/synthetic
-
-This is *not* real data -- just random-noise PNGs laid out exactly like the real
-download (fold-index CSVs + nested per-patch folders -- see
-src/lithos_ssl/data/splits.py's module docstring for why that layout exists). This
-script runs both real steps against that fake raw data -- generating it, then building
-the prepared index exactly the way `scripts/prepare_data.py` does for the real
-download -- so its output is immediately usable by `scripts/train.py`. Its only
-purpose is letting you run the full training + evaluation pipeline end to end in
-seconds, to confirm everything is wired together correctly, before pointing it at the
-real ~18GB download and letting it run for hours. For example:
-
-    python scripts/make_synthetic_dataset.py --root data/synthetic
-    python scripts/train.py model=simclr data.root=data/synthetic data.image_size=32 \\
-        trainer.max_epochs=2
-    python scripts/evaluate.py --model simclr --checkpoint checkpoints/simclr/last.ckpt \\
-        --data-root data/synthetic --image-size 32
-"""
-
 from __future__ import annotations
 
 import argparse

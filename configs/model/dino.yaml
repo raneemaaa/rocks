@@ -1,5 +1,3 @@
-# DINO (v1). Every field below (other than `name` and `transform`) is passed straight
-# into lithos_ssl.models.dino.DINO as a constructor keyword argument.
 name: dino
 
 backbone_name: resnet18

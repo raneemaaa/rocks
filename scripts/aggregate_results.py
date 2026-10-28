@@ -1,17 +1,3 @@
-"""Rebuild results/RESULTS.md from every results/runs/*.json record.
-
-Run after one or more `scripts/evaluate.py` calls:
-
-    python scripts/aggregate_results.py
-
-Reads every JSON record scripts/evaluate.py has ever written, keeps only the
-best-scoring run per model (so re-evaluating a model after more training doesn't leave
-stale rows behind), and writes a sorted markdown table. Regenerating the whole table
-from the raw per-run records each time -- rather than appending text to RESULTS.md
-directly -- means the table can never end up corrupted or duplicated by a half-finished
-run.
-"""
-
 from __future__ import annotations
 
 import argparse

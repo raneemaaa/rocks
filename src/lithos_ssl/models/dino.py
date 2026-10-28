@@ -1,28 +1,3 @@
-"""DINO (v1): "Emerging Properties in Self-Supervised Vision Transformers" (Caron et al., 2021).
-
-The core idea, in plain English
---------------------------------
-Take one image and produce several different augmented "views" of it: two large
-("global") crops and several small ("local") crops. Run all views through a *student*
-network and only the two global views through a *teacher* network. Train the student so
-its output distribution matches the teacher's output distribution for the same image,
-for every pair of views. There are no negative pairs (no "push these two apart") and no
-labels anywhere -- the only signal is "these crops came from the same photo, so the
-network's summary of them should agree."
-
-The teacher is never trained directly. Instead, after every student update, we nudge
-the teacher's weights a little bit towards the student's (an exponential moving
-average, or "momentum update"). This keeps the teacher's targets slowly-changing and
-stable, which turns out to be what stops the whole system from collapsing to a trivial
-"output the same constant for every image" solution (the other key piece of that
-anti-collapse puzzle is DINOLoss's internal centering/sharpening of the targets).
-
-This file closely follows Lightly's own reference implementation
-(lightly/examples/pytorch_lightning/dino.py in the lightly-ai/lightly repo), restructured
-to read its hyperparameters from a Hydra config (configs/model/dino.yaml) instead of
-being hardcoded, and to expose an `embed()` method the evaluation code can call.
-"""
-
 from __future__ import annotations
 
 import copy

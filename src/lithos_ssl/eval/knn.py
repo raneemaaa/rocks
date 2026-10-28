@@ -1,15 +1,3 @@
-"""k-nearest-neighbour evaluation of a frozen embedding space.
-
-This is the standard "does this representation even separate the classes" check used
-throughout the self-supervised learning literature (it's how the DINO paper reports its
-headline numbers): embed a labelled "reference" set, embed a labelled "query" set, and
-for each query, vote on its label using the k closest reference embeddings by cosine
-similarity. No training/gradient descent involved -- which is exactly why it's cheap
-enough to run *every few epochs during pretraining* (see eval/callbacks.py) to track
-whether the representation is actually improving, not just whether the pretext loss is
-going down (a lower SSL loss doesn't always mean better downstream features).
-"""
-
 from __future__ import annotations
 
 import numpy as np

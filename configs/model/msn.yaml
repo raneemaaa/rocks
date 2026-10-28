@@ -1,5 +1,3 @@
-# MSN. Every field below (other than `name` and `transform`) is passed straight into
-# lithos_ssl.models.msn.MSN as a constructor keyword argument.
 name: msn
 
 image_size: ${data.image_size}

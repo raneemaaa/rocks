@@ -1,14 +1,3 @@
-# Data pipeline config. `image_size` is the single source of truth for crop size --
-# every model config references it as ${data.image_size} instead of repeating the
-# number, which matters most for DINOv2 (its patch-masking math has to agree with the
-# actual input resolution -- see models/dinov2.py's training_step).
-
-# Where the downloaded+unzipped Kaggle dataset lives. Override on the command line
-# (`python scripts/train.py data.root=/path/to/lithos`) or edit this once you know
-# where you put it -- see README.md for the download instructions. `csv_name` is the
-# *prepared* index (see src/lithos_ssl/data/splits.py's module docstring) that
-# `scripts/prepare_data.py` builds from the real download's raw files -- run that
-# script once before training.
 root: data/raw/lithos
 csv_name: patch_index.csv
 

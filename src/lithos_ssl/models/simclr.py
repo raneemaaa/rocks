@@ -1,25 +1,3 @@
-"""SimCLR: "A Simple Framework for Contrastive Learning of Visual Representations"
-(Chen et al., 2020).
-
-The core idea, in plain English
---------------------------------
-The simplest of the four methods here, and a useful sanity-check baseline against the
-fancier ones. Make two augmented views of the same image (a "positive pair"). Run every
-image in the batch through one shared backbone + small projection head. Pull each
-positive pair's two embeddings *together* and push every other embedding in the batch
-*apart* from them (that's what "contrastive" means -- unlike DINO/DINOv2/MSN, SimCLR
-explicitly needs negative examples, which it gets for free from the rest of the batch).
-
-No momentum teacher, no masking, no prototypes -- just one network and one loss
-(NT-Xent, a temperature-scaled cross-entropy over cosine similarities). This makes it
-by far the cheapest of the four to train, at the cost of generally weaker features and
-a reliance on large batch sizes for enough negatives to be useful.
-
-Closely follows Lightly's reference implementation
-(lightly/examples/pytorch_lightning/simclr.py), with hyperparameters moved into a Hydra
-config (configs/model/simclr.yaml) and an `embed()` method added for evaluation.
-"""
-
 from __future__ import annotations
 
 import pytorch_lightning as pl

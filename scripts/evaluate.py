@@ -1,26 +1,3 @@
-"""Evaluate one trained checkpoint (or a frozen pretrained baseline) on the held-out
-LITHOS test split, and record the result.
-
-Usage:
-    python scripts/evaluate.py --model simclr --checkpoint checkpoints/simclr/best.ckpt
-    python scripts/evaluate.py --model dinov3_frozen
-
-Computes two standard self-supervised-learning evaluation numbers (see
-src/lithos_ssl/eval/knn.py and linear_probe.py for what each one means and why both are
-useful) on embeddings extracted from the labelled train split (as the "reference"/
-fitting set) and the held-out test split:
-
-- kNN accuracy: how well a simple nearest-neighbour vote in embedding space predicts
-  the mineral class, with no extra training.
-- Linear-probe accuracy: how well a single trained linear layer on top of the frozen
-  embeddings predicts the mineral class.
-
-Writes one JSON file per run to results/runs/, which scripts/aggregate_results.py
-later collects into results/RESULTS.md -- writing immutable per-run records instead of
-editing the markdown table directly means re-running evaluate.py never risks
-corrupting or duplicating a row.
-"""
-
 from __future__ import annotations
 
 import argparse

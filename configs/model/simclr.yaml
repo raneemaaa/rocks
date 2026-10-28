@@ -1,5 +1,3 @@
-# SimCLR. Every field below (other than `name` and `transform`) is passed straight
-# into lithos_ssl.models.simclr.SimCLR as a constructor keyword argument.
 name: simclr
 
 backbone_name: resnet18

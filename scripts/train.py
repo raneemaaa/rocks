@@ -1,28 +1,3 @@
-"""Train one self-supervised model on LITHOS PPL patches.
-
-Usage:
-    python scripts/train.py                              # defaults: model=simclr
-    python scripts/train.py model=dinov2
-    python scripts/train.py model=msn trainer.max_epochs=50 data.batch_size=32
-
-See configs/train.yaml for every available override, and configs/model/*.yaml for
-method-specific hyperparameters. What this script actually does, end to end:
-
-1. build a LithosDataModule (PPL-only patches, split by thin section -- see
-   src/lithos_ssl/data/)
-2. build the chosen LightningModule (DINO / DINOv2 / MSN / SimCLR -- see
-   src/lithos_ssl/models/)
-3. train it with a PyTorch Lightning Trainer, while an OnlineKNNEvalCallback
-   periodically checks downstream kNN accuracy on a held-out split (see
-   src/lithos_ssl/eval/callbacks.py) so ModelCheckpoint can save the epoch that was
-   actually *best at the real task*, not just the one with the lowest pretext loss
-4. always additionally save the final ("last") checkpoint too, for later fine-tuning
-
-This script does *not* compute the final linear-probe/kNN numbers that go in
-results/RESULTS.md -- that's scripts/evaluate.py, run afterwards against whichever
-checkpoint this script produced.
-"""
-
 from __future__ import annotations
 
 import sys

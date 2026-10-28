@@ -1,6 +1,3 @@
-# The DINOv3 frozen baseline (see src/lithos_ssl/models/frozen_backbone.py). Not used
-# by scripts/train.py (there's nothing to train); scripts/evaluate.py reads this when
-# called with --model dinov3_frozen.
 name: dinov3_frozen
 
 # Smallest released DINOv3 checkpoint (ViT-S/16, ~21M params) -- a fair-ish size match
